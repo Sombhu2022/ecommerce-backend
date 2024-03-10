@@ -12,6 +12,16 @@ const userModel = new mongoose.Schema({
         unique:true,
         maxLength:200
     },
+    dp:  {
+        url: {
+            type: String,
+
+        },
+        image_id: {
+            type: String,
+        },
+
+    },
     roal:{
         type:String,
         default:"user"
