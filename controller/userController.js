@@ -2,18 +2,27 @@ import { Users } from "../model/userModel.js";
 import bcrypt from 'bcrypt'
 import { sendCookic } from "../utils/sendCookic.js";
 import { sendEmail } from "../utils/sendMail.js";
+import { v2 as cloudinary } from 'cloudinary';
+
 
 
 export const createUser = async (req, res) => {
 
     try {
-        const { name, password, email } = req.body
+        const { name, password, email, dp } = req.body
 
         let user = await Users.findOne({ email })
         if (user) return res.status(400).json({ message: "email alrady exist" })
 
         const hashPassword = await bcrypt.hash(password, 10);
-        user = await Users.create({ name, email, password: hashPassword })
+        const profilePic = await cloudinary.uploader.upload(dp , {
+            folder:"ecomUser"
+        })
+        const image = {
+            url:profilePic.secure_url,
+            image_id:profilePic.public_id,
+        }
+        user = await Users.create({ name, email, password: hashPassword , dp:image })
         sendCookic(user, res, "user created", 200)
         sendEmail(user.email, `wellcome ${user.name}`, "wellcome to our sabji bazar , harry up! showping now for your famaily health")
     } catch (error) {

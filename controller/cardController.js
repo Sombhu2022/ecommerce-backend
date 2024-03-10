@@ -4,9 +4,11 @@ export const addCard = async(req , res)=>{
     try {
         const { userId , productId} = req.body;
         const data = await Cards.create( req.body)
+
+        const product = await data.populate('product')
         res.status(200).json({
             message:" product add in card",
-            data
+            product
         })
         
     } catch (error) {
