@@ -12,7 +12,11 @@ export const createUser = async (req, res) => {
         const { name, password, email, dp } = req.body
 
         let user = await Users.findOne({ email })
-        if (user) return res.status(400).json({ message: "email alrady exist" })
+        console.log("user=>",user);
+        if (user){
+            console.log("user exist");
+         return res.status(400).json({ message: "email alrady exist" })
+        }
 
         const hashPassword = await bcrypt.hash(password, 10);
         const profilePic = await cloudinary.uploader.upload(dp , {
