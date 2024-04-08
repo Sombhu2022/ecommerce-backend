@@ -1,10 +1,11 @@
 import express from 'express'
-import { createUser, deleteUser, logInUser, logOutUser, updateUser } from '../controller/userController.js';
+import { createUser, deleteUser, logInUser, logOutUser, updateUser , getUser } from '../controller/userController.js';
 import { isAuthenticate } from '../middleware/Authentication.js';
 
 const router = express.Router();
 
 router
+   .get('/' , isAuthenticate , getUser)
    .post('/register' , createUser)
    .post('/login' , logInUser )
    .get('/logout' ,isAuthenticate, logOutUser)

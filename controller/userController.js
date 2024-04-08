@@ -29,6 +29,7 @@ export const createUser = async (req, res) => {
         user = await Users.create({ name, email, password: hashPassword , dp:image })
         sendCookic(user, res, "user created", 200)
         sendEmail(user.email, `wellcome ${user.name}`, "wellcome to our sabji bazar , harry up! showping now for your famaily health")
+
     } catch (error) {
         res.status(400).json({
             message: "user not create",
@@ -38,6 +39,22 @@ export const createUser = async (req, res) => {
 
     }
 }
+
+export const getUser = async (req, res) => {
+    try {
+      const { id } = req.user;
+      const user = await Users.findById({ _id: id });
+      res.status(200).json({
+        message: "user fetched",
+        user,
+      });
+    } catch (error) {
+      res.status(400).json({
+        message: "somthing error",
+        error,
+      });
+    }
+  };
 
 export const logInUser = async(req , res)=>{
    
