@@ -21,7 +21,7 @@ export const getAllProduct = async (req, res) => {
 export const getProduct = async (req, res) => {
     const { id } = req.params
     try {
-        const product = await Products.findById({ id })
+        const product = await Products.findById({ _id:id })
         res.status(200).json({
             message: "product are here",
             success: true,
@@ -146,6 +146,9 @@ export const searchProductByName = async (req, res) => {
     }
 }
 
+
+
+
 export const searchProductByCategory = async (req, res) => {
     // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
     const {category } = req.params;
@@ -163,6 +166,83 @@ export const searchProductByCategory = async (req, res) => {
             success: false,
             error
         })
+    }
+}
+
+
+
+const reviewPresent =(product , userid)=>{
+     return product.review?.find((ele)=>{
+        if(String(ele.user) === String(userid)){
+            return ele
+        }else{
+            return ""
+        }
+     })
+}
+
+
+export const postReview =async (req , res)=>{
+    try {
+        const user = req.user;
+        const { id } = req.params; 
+        const { reting , feedback } = req.body
+        console.log("data", String(user._id) ,id , reting , feedback);
+       
+        const product =await Products.findById({_id:id})
+
+       
+         
+        if(reviewPresent(product , user._id)){
+            console.log("ok"); 
+            const review = reviewPresent(product , user._id)
+            review.rating = reting
+            review.feedback = feedback
+            console.log(review);
+            // save finding product with out schema varification 
+            await product.save({ validateBeforeSave: false })
+        }else{
+            console.log("not ok");
+            let temp= product.review
+            temp.push( 
+                    {
+                        user:user._id ,
+                        rating: reting ,
+                        feedback:feedback
+                    }
+                )
+                await Products.findByIdAndUpdate(id , {review: temp} , { new: true})
+        }
+        
+      
+        
+        // this call populate maping ...  
+
+        const data =await Products.find({})
+        .populate('review.user')
+        .populate(
+            {
+              path: "review",
+              populate : {
+                path: "user",
+                model: "user"
+              }
+            }
+           )
+
+        // console.log(data);
+        res.status(200).json({
+            message:"review add",
+            product:data
+        })
+        
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            message:"review not add",
+            error
+        })
+        
     }
 }
 

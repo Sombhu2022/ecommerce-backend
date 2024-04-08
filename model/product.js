@@ -46,7 +46,22 @@ const productModel = new Schema({
         },
     ],
     review: [
+        {
+            user:{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'user',
+                required: true,
+                
+            },
+            rating:{
+                type : Number ,
+                
 
+            },
+            feedback:{
+                type:String
+            }
+        }
     ],
     createAt:{
         type:Date,
