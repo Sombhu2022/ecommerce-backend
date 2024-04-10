@@ -8,7 +8,7 @@ const productModel = new Schema({
         maxLength: 60,
         required: true,
     },
-    descreption: {
+    description: {
         type: String,
         maxLength: [2000 , "description must be under the 2000 charecter"],
     },
@@ -22,7 +22,9 @@ const productModel = new Schema({
     discount: {
         type: Number,
     },
-
+    actualPrice:{
+        type:Number
+    },
     stock: {
         type:String,
         required: true
@@ -63,6 +65,13 @@ const productModel = new Schema({
             }
         }
     ],
+    totalReview:{
+        type:Number
+    },
+    totalRating:{
+        type:Number
+    },
+    
     createAt:{
         type:Date,
         default:Date.now()

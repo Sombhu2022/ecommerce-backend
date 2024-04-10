@@ -21,7 +21,18 @@ export const getAllProduct = async (req, res) => {
 export const getProduct = async (req, res) => {
     const { id } = req.params
     try {
-        const product = await Products.findById({ _id:id })
+        const product = await Products.findById({ _id: id })
+            .populate('review.user')
+            .populate(
+                {
+                    path: "review",
+                    populate: {
+                        path: "user",
+                        model: "user"
+                    }
+                }
+            )
+
         res.status(200).json({
             message: "product are here",
             success: true,
@@ -37,41 +48,40 @@ export const getProduct = async (req, res) => {
 }
 
 export const addProduct = async (req, res) => {
-    // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
+    const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
     console.log(req.body);
     try {
-         const images =[]
-         console.log(typeof req.body.images , req.body.images.length);
-         if (typeof req.body.images === "string"){
-             images.push(req.body.images)
-         }
-         else{
+        const images = []
+        console.log(typeof req.body.images, req.body.images.length);
+        if (typeof req.body.images === "string") {
+            images.push(req.body.images)
+        }
+        else {
             console.log("ok");
             req.body.images.forEach(element => {
                 images.push(element)
             });
-        //    images = req.body.images
+            //    images = req.body.images
             console.log(images.length);
-         }
+        }
 
-        const tempImageStore =[]
+        const tempImageStore = []
 
-         for(let i=0 ; i < images.length ; i++){
+        for (let i = 0; i < images.length; i++) {
 
-             const result = await cloudinary.uploader.upload(images[i] , {
+            const result = await cloudinary.uploader.upload(images[i], {
                 folder: "ecommerce"
-             })
-            
-             tempImageStore.push({
-                image_id:result.public_id,
-                url:result.secure_url
-             })
+            })
+
+            tempImageStore.push({
+                image_id: result.public_id,
+                url: result.secure_url
+            })
             //  console.log(images[i])
             console.log("working");
-         }
+        }
 
         req.body.images = tempImageStore
-
         const product = await Products.create(req.body)
         res.status(200).json({
             message: "New Product added",
@@ -89,10 +99,10 @@ export const addProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
     // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
-    const {id } = req.params
+    const { id } = req.params
     console.log(req.body);
     try {
-        const product = await Products.findByIdAndUpdate(id , req.body , {new:true})
+        const product = await Products.findByIdAndUpdate(id, req.body, { new: true })
         res.status(200).json({
             message: "Product update successfully",
             success: true,
@@ -109,7 +119,7 @@ export const updateProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
     // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
-    const {id } = req.params
+    const { id } = req.params
     console.log(req.body);
     try {
         await Products.findByIdAndDelete(id)
@@ -128,10 +138,10 @@ export const deleteProduct = async (req, res) => {
 
 export const searchProductByName = async (req, res) => {
     // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
-    const {name}=req.params;
+    const { name } = req.params;
     console.log(req.body);
     try {
-        const product = await Products.find({name:name})
+        const product = await Products.find({ name: name })
         res.status(200).json({
             message: "secrching product",
             success: true,
@@ -151,10 +161,10 @@ export const searchProductByName = async (req, res) => {
 
 export const searchProductByCategory = async (req, res) => {
     // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
-    const {category } = req.params;
+    const { category } = req.params;
     console.log(req.body);
     try {
-        const product = await Products.find({category:category})
+        const product = await Products.find({ category: category })
         res.status(200).json({
             message: "product searching category",
             success: true,
@@ -171,78 +181,83 @@ export const searchProductByCategory = async (req, res) => {
 
 
 
-const reviewPresent =(product , userid)=>{
-     return product.review?.find((ele)=>{
-        if(String(ele.user) === String(userid)){
+const reviewPresent = (product, userid) => {
+    return product.review?.find((ele) => {
+        if (String(ele.user) === String(userid)) {
             return ele
-        }else{
+        } else {
             return ""
         }
-     })
+    })
 }
 
 
-export const postReview =async (req , res)=>{
+export const postReview = async (req, res) => {
     try {
         const user = req.user;
-        const { id } = req.params; 
-        const { reting , feedback } = req.body
-        console.log("data", String(user._id) ,id , reting , feedback);
-       
-        const product =await Products.findById({_id:id})
+        const { id } = req.params;
+        const { reting, feedback } = req.body
 
-       
-         
-        if(reviewPresent(product , user._id)){
-            console.log("ok"); 
-            const review = reviewPresent(product , user._id)
-            review.rating = reting
-            review.feedback = feedback
-            console.log(review);
-            // save finding product with out schema varification 
-            await product.save({ validateBeforeSave: false })
-        }else{
-            console.log("not ok");
-            let temp= product.review
-            temp.push( 
-                    {
-                        user:user._id ,
-                        rating: reting ,
-                        feedback:feedback
-                    }
-                )
-                await Products.findByIdAndUpdate(id , {review: temp} , { new: true})
+        const product = await Products.findById({ _id: id })
+
+        if (reviewPresent(product, user._id)) {
+
+            const review = reviewPresent(product, user._id)
+
+            if (reting)  review.rating = reting
+            if (feedback) review.feedback = feedback
+            
+        } else {
+            product.review.push(
+                {
+                    user: user._id,
+                    rating: reting,
+                    feedback: feedback
+                }
+            )
+            
         }
+    
+        const totalReview = product.review.length
+        product.totalReview = totalReview
         
-      
+        let totalRating =0;
+        product.review.map((ele)=>{
+            totalRating += ele.rating
+        })
+        product.totalRating = totalRating / totalReview
         
+        // save finding product with out schema varification 
+        await product.save({ validateBeforeSave: false })
+
+
         // this call populate maping ...  
 
-        const data =await Products.find({})
-        .populate('review.user')
-        .populate(
-            {
-              path: "review",
-              populate : {
-                path: "user",
-                model: "user"
-              }
-            }
-           )
+        const data = await Products.find({})
+            .populate('review.user')
+            .populate(
+                {
+                    path: "review",
+                    populate: {
+                        path: "user",
+                        model: "user"
+                    }
+                }
+            )
 
         // console.log(data);
         res.status(200).json({
-            message:"review add",
-            product:data
+            message: "review add",
+            product: data
         })
-        
+
     } catch (error) {
         console.log(error);
         res.status(400).json({
-            message:"review not add",
+            message: "review not add",
             error
         })
-        
+
     }
 }
 

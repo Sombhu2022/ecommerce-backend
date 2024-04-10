@@ -7,19 +7,31 @@ const cardModel = new Schema({
         ref: 'user',
         required: true
     },
-  
-    product:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'product',
-        required: true
-    } ,
-    
-    productQuantity: {
-            type: Number,
-            default: 1
+
+    cart:[
+
+        {
+        product:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'product',
+            required: true
+        } ,
+        
+        productQuantity: {
+                type: Number,
+                default: 0
+        },
+        totalPrice:{
+            type:Number,
+            default:0
+        }
+
+    }
+    ],
+    totalAmmount:{
+       type:Number
     },
     
-
     createAt: {
         type: Date,
         default: Date.now()
