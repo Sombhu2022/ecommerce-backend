@@ -1,47 +1,100 @@
+import { Products } from "../model/product.js";
 import { Cards } from "../model/cardModel.js";
 
-export const isMatch =( exProduct , product)=>{
-     return exProduct?.some((ele)=>{
-        console.log( String(ele.product ) , product);
-     return String(ele.product) === product })
+export const isProduct =( cart , productId)=>{
+     return cart?.find((ele)=>{
+        if (String(ele.product) === String(productId)) {
+            return ele
+        } else {
+            return ""
+        }     
+    })
 }
 
+
+
 export const addCard = async(req , res)=>{
-    
+
     try {
-        let quantityFull = null ;
         const { id } = req.user
-        const { productQuantity , product } = req.body; 
-        const exProduct =await Cards.find({user:id})
-        if( ! isMatch( exProduct , product)){
-            console.log("product not exist");
-            await Cards.create({user:id , product , productQuantity}) 
+        const { price, productId } = req.body; 
+
+        let totalAmmount ;
+        let totalPrice;
+        let quantityFull =null;
+        console.log("add to cart section run");
+        const card = await Cards.findOne({user:id})
+
+        if(! card){
+          
+            const data =await Cards.create({user:id ,
+                 cart:{product:productId , productQuantity:1 , totalPrice:price},
+                 totalAmmount:price
+                 }) 
+           
+            console.log(data);
+        
         }else{
-           let productData = await Cards.findOne({product:product}).populate("product")
-           console.log(productData);
-           if( Number(productData.product.stock) > Number(productData.productQuantity) && Number(productData.productQuantity) < 5 ){
-              console.log("ok");
-              const productQuantity =  Number(productData.productQuantity) + 1 ;
-              quantityFull = productQuantity
-              await Cards.findByIdAndUpdate({_id: productData._id} , { productQuantity} , {new:true} ) 
-           }else{
-            quantityFull= " Quantity  stack full or not available aenough stock" }
+             
+            if(!isProduct(card.cart , productId)){
+              
+                card.cart.push({
+                    product:productId,
+                    productQuantity:1,
+                    totalPrice: price
+                })
+                totalAmmount =card.totalAmmount + Number(price)
+                card.totalAmmount = totalAmmount.toFixed(2)
+             
+
+            }else{
+                
+                const cart = isProduct(card.cart , productId)
+                const data = await Products.findById({_id:cart.product})
+           
+                console.log( data);
+
+                if( Number(data.stock) > Number(cart.productQuantity) && Number(cart.productQuantity) < 5 ){
+                    console.log("ok");
+                
+                    cart.productQuantity += 1
+                    quantityFull = cart.productQuantity
+
+                    totalPrice = cart.totalPrice + Number(price)
+                    cart.totalPrice = totalPrice.toFixed(2)
+                    totalAmmount = card.totalAmmount + Number(price)
+                   card.totalAmmount = totalAmmount.toFixed(2)
+            }else{
+                quantityFull= " Quantity  stack full or not available aenough stock"
+            }
+
+            await card.save({ validateBeforeSave: false })
         }
-        const data =await Cards.find({user:id}).populate("product")
-        // console.log("ok populate" , data);
+    }
+        
+         const data =await Cards.find({user:id})
+         .populate("cart.product")
+         .populate({
+            path: "cart",
+            populate:{
+                 path:"product",
+                 module:"product"
+            }
+        })
+    
+       
         res.status(200).json({
             message:" product add in card",
             product:data,
             quantity:quantityFull
         })
-        
+    
     } catch (error) {
-        res.status(400).json({
-            message:"product not add",
-            error
-        })
+        console.log(error);
     }
+    
 }
+
 
 export const getProductInCardOfUser = async(req, res)=>{
      
