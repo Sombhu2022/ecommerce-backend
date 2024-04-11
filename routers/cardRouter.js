@@ -1,12 +1,13 @@
 import express from 'express'
-import { addCard, getProductInCardOfUser } from '../controller/cardController.js'
+import { addCard, getProductInCartOfUser, updateQuantity } from '../controller/cardController.js'
 import { isAuthenticate } from '../middleware/Authentication.js'
 
 const router = express.Router()
 
 router
  .post('/' ,isAuthenticate, addCard )
- .get('/' , isAuthenticate, getProductInCardOfUser )
+ .get('/' , isAuthenticate, getProductInCartOfUser )
+ .post('/update-quantity' , isAuthenticate , updateQuantity)
 
 
 
