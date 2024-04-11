@@ -4,12 +4,14 @@ import "dotenv/config"
 import { dbConection } from "./db/dbConection.js"
 import bodyParser from "body-parser"
 import fileUpload from 'express-fileupload';
-import { productRouter } from "./routers/productRouter.js"
-import { userRouter } from "./routers/userRouter.js"
 import cors from "cors"
 import { v2 as cloudinary } from 'cloudinary';
-import { cardRoute } from "./routers/cardRouter.js";
 import cookieParser from "cookie-parser";
+
+import { cardRoute } from "./routers/cardRouter.js";
+import { userRouter } from "./routers/userRouter.js"
+import { productRouter } from "./routers/productRouter.js"
+import  { orderRouter } from "./routers/orderRouter.js";
 
 export const app = express()
 
@@ -47,6 +49,7 @@ dbConection();
 app.use("/product", productRouter)
 app.use('/user' , userRouter)
 app.use('/card' , cardRoute )
+app.use('/order' , orderRouter)
 
 app.listen(process.env.PORT, () => {
     console.log(`port :- http://localhost:${process.env.PORT}/`)
