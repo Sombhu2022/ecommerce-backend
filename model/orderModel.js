@@ -1,5 +1,5 @@
 
-
+import mongoose from "mongoose";
 import { Schema, model } from "mongoose";
 
 const orderSchema =new Schema({
@@ -13,29 +13,52 @@ const orderSchema =new Schema({
         required:true ,
         maxLength: [60, "price can be under 5 digit"]
     } ,
-    phoneNo:{
+    phone:{
         type:Number,
         maxLength:10
     },
     address:{
+        coordinates:[
+            {
+                type:Number
+            }
+        ],
+        pinCode:{
+           type:String
+        },
         city:{
             type:String
         },
         state:{
             type:String
         },
-        pinCode:{
-           type:String
+        disc:{
+            type:String
         },
-        location:{
+        cuntry:{
             type:String
         }
     },
-    product:[
-        { 
-           type:mongoose.Schema.Types.ObjectId,
-           ref:'product',   
+    products:[
+        {
+        product:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'product',
+            required: true
+        } ,
+        productName:{
+             type:String
+        },
+        productQuantity: {
+                type: Number,
+                default: 0
+        },
+        totalPrice:{
+            type:Number,
+            default:0
         }
+
+    }
     ],
     totalAmmount:{
         type:Number,
@@ -49,7 +72,6 @@ const orderSchema =new Schema({
         type:String,
         default:"online"
     },
-    
 })
 
 export const Orders = model('order' , orderSchema);
