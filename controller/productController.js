@@ -230,9 +230,7 @@ export const postReview = async (req, res) => {
         // save finding product with out schema varification 
         await product.save({ validateBeforeSave: false })
 
-
         // this call populate maping ...  
-
         const data = await Products.find({})
             .populate('review.user')
             .populate(

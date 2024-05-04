@@ -1,14 +1,18 @@
 import NodeGeocoder from 'node-geocoder'
-import request from 'request';
 import { Cards } from '../model/cardModel.js';
 import { Orders } from '../model/OrderModel.js';
 import axios from 'axios'
 import uniqid from 'uniqid'
 import sha265 from 'sha256'
+import crypto from 'crypto'
+import { request } from 'http';
+
+import Razorpay from 'razorpay'
+import { Products } from '../model/product.js';
 
 export const addOrderIntoCart = async (req, res) => {
   try {
-    const { id } = req.user
+    const { id , name } = req.user
     console.log(id);
     const { email, phone, city, state, district, pincode, cuntry, paymentType, totalAmmount, delivaryFees, products } = req.body
     //  console.log(req.body);
@@ -36,61 +40,39 @@ export const addOrderIntoCart = async (req, res) => {
 
     const data = await Orders.create({ user: id, email, phone, products: productArray, totalAmmount, delivaryCharge: delivaryFees, paymentType })
 
-
     if (paymentType === 'online') {
       
-      let merchantTransactionId = uniqid()
-      console.log(merchantTransactionId);
-      const payload ={
-        "merchantId": `${process.env.MARCHENT_ID}`,
-        "merchantTransactionId": merchantTransactionId,
-        "merchantUserId": 1234,
-        "amount": 100,
-        "redirectUrl": `https://localhost:${process.env.PORT}/redirect-url/${merchantTransactionId}`,
-        "redirectMode": "REDIRECT",
-        "callbackUrl": "https://webhook.site/callback-url",
-        // "mobileNumber": "9999999999",
-        "paymentInstrument": {
-          "type": "PAY_PAGE"
-        }
-      }
+    console.log(process.env.RAZORPAY_ID);
+
+     const instance = new Razorpay({
+      key_id: process.env.RAZORPAY_ID,
+      key_secret: process.env.RAZORPAY_KEY,
+    });
+
+    const options = {
+      amount: Number(totalAmmount * 100),
+      currency: "INR",
+    };
+
+    try {
       
-     
-     const base64 =  Buffer.from(JSON.stringify(payload)).toString("base64")
-     const sha256 = sha265(base64 + `${process.env.PHONE_PAY_END_POINT}`+ process.env.SALT_KEY)
-     const xVerify = sha256 + "###" + process.env.SALT_INDEX
-     console.log("*****************************************\n",xVerify);
-     //SHA256(Base64 encoded payload + “/pg/v1/pay” + salt key) + ### + salt index
+      const order = await instance.orders.create(options);
+    
+      res.status(200).json({
+        success: true,
+        order,
+        key:process.env.RAZORPAY_ID,
+        data
+      });
+    } catch (error) {
+      console.log("this error",error);
+      res.status(400).json({
+        success: false,
+        error,
+      });
 
-      const options = {
-        method: 'post',
-        url:`${process.env.PHONE_PAY_HOST_URL}${process.env.PHONE_PAY_END_POINT}`,
-        headers: {
-          'Content-Type': 'application/json',
-          "X-VERIFY":xVerify
-        },
-        data: {
-          request:base64
-        }
-      };
+    }
 
-     await axios
-        .request(options)
-        .then(function (response) {
-          console.log("data=>",response.data);
-          res.status(200).json({
-            success: true,
-            data: data,
-            payment: response.data
-          })
-        })
-        .catch(function (error) {
-          console.error(error);
-          res.status(400).json({
-           message:"payment not ",
-           error
-          })
-        });
     }else if(paymentType === 'offline'){
        res.status(200).json({
       success: true,
@@ -109,3 +91,54 @@ export const addOrderIntoCart = async (req, res) => {
 
 
 }
+
+
+export const paymentVerification = async (req, res) => {
+  try {
+    
+    console.log("payment varifiy");
+    const { id } = req.params
+    console.log(id);
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
+  console.log("payment Verification page " , req.body);
+  
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+  
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY)
+      .update(body.toString())
+      .digest("hex");
+  
+    const isAuthentic = expectedSignature === razorpay_signature;
+  
+    if (isAuthentic) {
+      // Database comes here
+  
+     const data = await Orders.findById({_id:id})
+     if(data){
+      data.razorpay_order_id = razorpay_order_id
+      data.razorpay_payment_id = razorpay_payment_id
+      data.razorpay_signature = razorpay_signature
+      await data.save({ validateBeforeSave: false })
+     }
+     console.log(data);
+    //  const product = await Products.findById({}) 
+
+    // delete cart ..
+    // subtruct ordered product ..
+      res.redirect(
+        `${process.env.FRONTEND_URL}/success/${razorpay_payment_id}`
+      );
+    } else {
+      res.status(400).json({
+        success: false,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+};
+
+
