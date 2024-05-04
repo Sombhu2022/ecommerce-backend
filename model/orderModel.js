@@ -72,6 +72,22 @@ const orderSchema =new Schema({
         type:String,
         default:"online"
     },
+    delivarStatus:{
+         type:String,
+         default:"pending"
+    },
+    razorpay_order_id: {
+        type: String,
+        // required: true,
+      },
+      razorpay_payment_id: {
+        type: String,
+        // required: true,
+      },
+      razorpay_signature: {
+        type: String,
+        // required: true,
+      },
 })
 
 export const Orders = model('order' , orderSchema);
