@@ -1,21 +1,23 @@
 import NodeGeocoder from 'node-geocoder'
 import { Cards } from '../model/cardModel.js';
-import { Orders } from '../model/OrderModel.js';
+import { Orders } from '../model/orderModel.js';
+import { Products } from '../model/product.js';
+
+import crypto from 'crypto'
+
 import axios from 'axios'
 import uniqid from 'uniqid'
 import sha265 from 'sha256'
-import crypto from 'crypto'
 import { request } from 'http';
 
 import Razorpay from 'razorpay'
-import { Products } from '../model/product.js';
 
 export const addOrderIntoCart = async (req, res) => {
   try {
     const { id , name } = req.user
     console.log(id);
     const { email, phone, city, state, district, pincode, cuntry, paymentType, totalAmmount, delivaryFees, products } = req.body
-    //  console.log(req.body);
+     console.log(req.body);
     const product = await Cards.findById({ _id: products }).populate("cart.product")
       .populate({
         path: "cart",
@@ -26,7 +28,7 @@ export const addOrderIntoCart = async (req, res) => {
       })
     //  console.log(product);
     let productArray = []
-
+    if(! product) res.status(400).json({success:false , message:'first select product' })
     product?.cart?.forEach(element => {
       // console.log(element);
       productArray.push({
@@ -38,8 +40,12 @@ export const addOrderIntoCart = async (req, res) => {
     })
     // console.log(productArray);
 
-    const data = await Orders.create({ user: id, email, phone, products: productArray, totalAmmount, delivaryCharge: delivaryFees, paymentType })
-
+    const data = await Orders.create({ user: id, email, phone, products: productArray, totalAmmount, delivaryCharge: delivaryFees, paymentType , address:{ city, state, district, pincode, cuntry } })
+   
+    await Cards.findByIdAndDelete({_id:products }).then((result)=>{
+        console.log(result);
+    }).catch((err)=>{ console.log(err); })
+      
     if (paymentType === 'online') {
       
     console.log(process.env.RAZORPAY_ID);
@@ -74,11 +80,29 @@ export const addOrderIntoCart = async (req, res) => {
     }
 
     }else if(paymentType === 'offline'){
-       res.status(200).json({
+      console.log("offline payment");
+
+      try {
+        const product = await Products.findById({_id:ele.product})
+        console.log(product , ele);
+        if(product){
+
+          product.stock -= ele.productQuantity
+          await product.save({ validateBeforeSave:false })
+        }
+        
+      } catch (error) {
+        console.log(error);
+      }
+
+      console.log(data);
+      res.status(200).json({
       success: true,
-      data: data,
+      data,
       payment:"pending"
-    })
+    });
+
+   console.log("all ok");
     }
 
   } catch (error) {
@@ -116,11 +140,29 @@ export const paymentVerification = async (req, res) => {
       // Database comes here
   
      const data = await Orders.findById({_id:id})
+     
      if(data){
       data.razorpay_order_id = razorpay_order_id
       data.razorpay_payment_id = razorpay_payment_id
       data.razorpay_signature = razorpay_signature
+      data.paymentStatus ='success'
       await data.save({ validateBeforeSave: false })
+
+      data.products?.map(async(ele)=>{
+        try {
+          const product = await Products.findById({_id:ele.product})
+          console.log(product , ele);
+          if(product){
+
+            product.stock -= ele.productQuantity
+            await product.save({ validateBeforeSave:false })
+          }
+          
+        } catch (error) {
+          console.log(error);
+        }
+      })
+      
      }
      console.log(data);
     //  const product = await Products.findById({}) 
