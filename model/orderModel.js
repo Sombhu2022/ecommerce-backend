@@ -23,7 +23,7 @@ const orderSchema =new Schema({
                 type:Number
             }
         ],
-        pinCode:{
+        pincode:{
            type:String
         },
         city:{
@@ -32,7 +32,7 @@ const orderSchema =new Schema({
         state:{
             type:String
         },
-        disc:{
+        district:{
             type:String
         },
         cuntry:{
@@ -71,6 +71,11 @@ const orderSchema =new Schema({
     paymentType:{
         type:String,
         default:"online"
+    },
+    paymentStatus:{
+        type:String,
+        enum:['panding' , 'success' , 'rejected'],
+        default:'panding'
     },
     delivarStatus:{
          type:String,

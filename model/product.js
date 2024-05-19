@@ -26,7 +26,7 @@ const productModel = new Schema({
         type:Number
     },
     stock: {
-        type:String,
+        type:Number,
         required: true
     },
     brand: {
@@ -72,13 +72,13 @@ const productModel = new Schema({
         type:Number
     },
     
-    createAt:{
-        type:Date,
-        default:Date.now()
-    }
+    // createAt:{
+    //     type:Date,
+    //     default:Date.now()
+    // }
 
 },
-{ strictPopulate: false }
+{ strictPopulate: false , timestamps:true }
 )
 
 

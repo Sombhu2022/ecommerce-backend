@@ -26,12 +26,14 @@ export const addCard = async(req , res)=>{
         // console.log("add to cart section run");
         const card = await Cards.findOne({user:id}) 
 
-        if(! card){
+        if(!card){
           
-            const data =await Cards.create({user:id ,
+
+            await Cards.create({user:id ,
                  cart:{product:productId , productQuantity:1 , totalPrice:price},
                  totalAmmount:price
-                 }) 
+                 }).then((result)=>console.log(result))
+                 .catch((err)=>console.log(err))
            
             // console.log(data);
         
@@ -44,8 +46,10 @@ export const addCard = async(req , res)=>{
                     productQuantity:1,
                     totalPrice: price
                 })
+
                 totalAmmount = card.totalAmmount + Number(price)
                 card.totalAmmount = totalAmmount.toFixed(2)
+                
 
                 // console.log("all ok");
 
@@ -54,7 +58,7 @@ export const addCard = async(req , res)=>{
                 const cart = isProduct(card.cart , productId)
                 const data = await Products.findById({_id:cart.product})
            
-                // console.log( data);
+                console.log( data);
 
                 if( Number(data.stock) > Number(cart.productQuantity) && Number(cart.productQuantity) < 5 ){
                     // console.log("ok");
@@ -161,7 +165,7 @@ export const updateQuantity = async(req , res)=>{
          const cart = isProductInCart(product.cart , cartId)
          console.log(cart);
          if(type === '+'){
-            if(cart.productQuantity > Number(cart.product.stock) || cart.productQuantity >= 5 ){
+            if(cart.productQuantity >= Number(cart.product.stock) || Number(cart.productQuantity) >= 5 ){
                 quantityFull= " Quantity  stack full or not available aenough stock"                 
             }else{
                 cart.productQuantity +=1

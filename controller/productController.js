@@ -102,7 +102,8 @@ export const updateProduct = async (req, res) => {
     const { id } = req.params
     console.log(req.body);
     try {
-        const product = await Products.findByIdAndUpdate(id, req.body, { new: true })
+         await Products.findByIdAndUpdate({_id:id}, req.body, { new: true })
+         const product = Products.find({})
         res.status(200).json({
             message: "Product update successfully",
             success: true,
@@ -120,12 +121,14 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
     const { id } = req.params
-    console.log(req.body);
+    // console.log(req.body);
     try {
-        await Products.findByIdAndDelete(id)
+        await Products.findByIdAndDelete({_id:id})
+        const data = Products.find({})
         res.status(200).json({
             message: "Product deleted",
             success: true,
+            product:data
         })
     } catch (error) {
         res.status(400).json({
