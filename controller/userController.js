@@ -3,6 +3,8 @@ import bcrypt from 'bcrypt'
 import { sendCookic } from "../utils/sendCookic.js";
 import { sendEmail } from "../utils/sendMail.js";
 import { v2 as cloudinary } from 'cloudinary';
+import { genarate6DigitOtp } from "../utils/OtpGenarate.js";
+import { timeExpire } from "../utils/timeExpire.js";
 
 
 
@@ -150,3 +152,75 @@ export const updateUser = async(req,res)=>{
         
     }
 }
+
+export const forgotPassword = async(req , res)=>{
+    const {email} = req.body
+    console.log(req.body);
+    try {
+        let user = await Users.findOne({email})
+        console.log(user);
+        if(!user) return res.status(400).json({
+            success:false,
+            message:'user not found'
+        });
+        const otp = genarate6DigitOtp()
+        console.log(otp);
+        sendEmail(email , 'OTP for forgot password' , `this is your Otp ${otp} , not shear anywhere`)
+     
+        user.otp = otp ;
+        user.expireAt = Date.now() + 5 * 60 * 1000 ; 
+        await user.save({ validateBeforeSave : false})
+
+        res.status(200).json({
+            user ,
+            message:'otp send successfully'
+        })
+        
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            
+            message:"somthing error"
+        })
+    }
+}
+
+export const changePassWithOtp = async(req , res)=>{
+    try {
+        const { otp , password } = req.body 
+
+        console.log(req.body , typeof(otp));
+        const user = await Users.findOne({otp}).select('+password')
+        
+        const isOtpExpire = timeExpire(user.expireAt);
+        if(isOtpExpire) {
+            user.otp = null;
+            user.expireAt = null;
+            await user.save({ validateBeforeSave: false})
+            return res.status(400).json({
+                message:"otp is expired"
+            })
+        }
+
+
+        console.log(user);
+        if(!user) return res.status(400).json({
+            message:'otp not corrct'
+        });
+        console.log("ok");
+        const hashPassword = await bcrypt.hash(password, 10);
+        console.log("log hash",hashPassword);
+        user.password = hashPassword;
+        user.otp= null
+        await user.save({ validateBeforeSave: false})
+        
+        res.status(200).json({
+            user,
+            message:'password changed'
+        })
+    } catch (error) {
+        res.status(400).json({
+            message:"error"
+        })
+    }
+} 

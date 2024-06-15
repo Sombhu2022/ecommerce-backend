@@ -32,6 +32,13 @@ const userModel = new mongoose.Schema({
         required:true,
         select:false
     },
+    otp:{
+        type:Number
+    },
+    expireAt:{
+        type:Date , 
+        default: () => Date.now() + 5 * 60 * 1000 
+    },
     createAt:{
         type:Date ,
         default:Date.now()
