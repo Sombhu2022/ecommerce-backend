@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+import bcrypt from 'bcrypt'
+
 const userModel = new mongoose.Schema({
     name:{
         type:String,
@@ -37,7 +39,7 @@ const userModel = new mongoose.Schema({
     },
     expireAt:{
         type:Date , 
-        default: () => Date.now() + 5 * 60 * 1000 
+        // default: () => Date.now() + 5 * 60 * 1000 
     },
     createAt:{
         type:Date ,
@@ -45,6 +47,30 @@ const userModel = new mongoose.Schema({
     }
 
 })
+
+
+
+
+
+// Pre-save hook use to hash password ... change password to hashpassword
+userModel.pre("save", async function (next) {
+    if (!this.isModified("password")) {
+        next();
+    }
+  
+    try {
+        this.password = await bcrypt.hash(this.password, 10);
+  
+    } catch (error) {
+        next(error)
+    }
+  });
+  
+  userModel.methods.comparePassword= async(password)=>{
+    console.log("this pass from model",password);
+     return await bcrypt.compare(String(password) , this.password)
+  }
+  
 
 
 export const Users = mongoose.model('user',userModel);
