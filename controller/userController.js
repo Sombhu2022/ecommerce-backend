@@ -20,7 +20,7 @@ export const createUser = async (req, res) => {
          return res.status(400).json({ message: "email alrady exist" })
         }
 
-        const hashPassword = await bcrypt.hash(password, 10);
+       
         const profilePic = await cloudinary.uploader.upload(dp , {
             folder:"ecomUser"
         })
@@ -28,7 +28,7 @@ export const createUser = async (req, res) => {
             url:profilePic.secure_url,
             image_id:profilePic.public_id,
         }
-        user = await Users.create({ name, email, password: hashPassword , dp:image })
+        user = await Users.create({ name, email, password , dp:image })
         sendCookic(user, res, "user created", 200)
         sendEmail(user.email, `wellcome ${user.name}`, "wellcome to our sabji bazar , harry up! showping now for your famaily health")
 
@@ -207,10 +207,8 @@ export const changePassWithOtp = async(req , res)=>{
         if(!user) return res.status(400).json({
             message:'otp not corrct'
         });
-        console.log("ok");
-        const hashPassword = await bcrypt.hash(password, 10);
-        console.log("log hash",hashPassword);
-        user.password = hashPassword;
+
+        user.password = password;
         user.otp= null
         await user.save({ validateBeforeSave: false})
         
@@ -224,3 +222,28 @@ export const changePassWithOtp = async(req , res)=>{
         })
     }
 } 
+
+export const ChangePasswordWithOldPassword = async(req , res)=>{
+     
+    const {id} = req.user
+    const { oldPassword , newPassword } = req.body
+    console.log("log password" , oldPassword);
+    try {
+        const user = await Users.findById(id).select("+password")
+        const isMatch =await user.comparePassword(oldPassword)
+       
+        if(!isMatch) return res.status(400).json({
+            message:" password not match"
+        })
+
+        user.password = newPassword;
+        await user.save({validateBeforeSave: false})
+        
+        res.status(200).json({ success:true , message:"password change successfully", user })
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ success:false , message:"password not change", error })
+        
+    }
+
+}
