@@ -51,7 +51,7 @@ dbConection();
 
 
 
-app.get("/" , ( req , res)=>{
+app.get('/' , ( req , res)=>{
        res.send("this is my eccomerce project ... ")
 })
 app.use("/product", productRouter)
