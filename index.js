@@ -16,8 +16,7 @@ import  { orderRouter } from "./routers/orderRouter.js";
 // import { CronJob } from 'cron'
 // import { sendEmail } from "./utils/sendMail.js";
 
-
-export const app = express()
+ const app = express()
 
 app.use(bodyParser.json({limit:"50mb"}))
 app.use(express.json({ limit: '50mb' }))
