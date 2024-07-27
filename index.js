@@ -13,11 +13,10 @@ import { userRouter } from "./routers/userRouter.js"
 import { productRouter } from "./routers/productRouter.js"
 import  { orderRouter } from "./routers/orderRouter.js";
 
-// import { CronJob } from 'cron'
-// import { sendEmail } from "./utils/sendMail.js";
 
 
 const app = express()
+
 
 app.use(bodyParser.json({limit:"50mb"}))
 app.use(express.json({ limit: '50mb' }))
@@ -51,7 +50,8 @@ cloudinary.config({
 dbConection();
 
 
-app.get("/" , async function( req , res){
+
+app.use("/" , async function( req , res){
        res.send("this is my eccomerce project ... ")
 })
 app.use("/product", productRouter)
