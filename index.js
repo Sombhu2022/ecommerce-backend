@@ -51,20 +51,6 @@ cloudinary.config({
 dbConection();
 
 
-// from checking ....
-// import { CronJob } from 'cron';
-
-// equivalent job using the "from" static method, providing parameters as an object
-// const 
-// const job = CronJob.from({
-// 	cronTime: '46 9 18 5 * ',
-// 	onTick: function () {
-// 		sendEmail('sombhudas93@gmail.com' , 'hii sombhu vai' , 'hii vai kese ho')
-// 	},
-// 	start: true,
-// 	timeZone: 'system'
-// });
-
 app.use("/" , async function( req , res){
        res.send("this is my eccomerce project ... ")
 })
