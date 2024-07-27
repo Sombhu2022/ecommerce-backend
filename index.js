@@ -51,7 +51,7 @@ cloudinary.config({
 dbConection();
 
 
-app.use("/" , async function( req , res){
+app.get("/" , async function( req , res){
        res.send("this is my eccomerce project ... ")
 })
 app.use("/product", productRouter)
