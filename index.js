@@ -16,7 +16,9 @@ import  { orderRouter } from "./routers/orderRouter.js";
 // import { CronJob } from 'cron'
 // import { sendEmail } from "./utils/sendMail.js";
 
+
  const app = express()
+
 
 app.use(bodyParser.json({limit:"50mb"}))
 app.use(express.json({ limit: '50mb' }))
@@ -64,6 +66,9 @@ dbConection();
 // 	timeZone: 'system'
 // });
 
+app.use("/" , async function( req , res){
+       res.send("this is my eccomerce project ... ")
+})
 app.use("/product", productRouter)
 app.use('/user' , userRouter)
 app.use('/card' , cardRoute )

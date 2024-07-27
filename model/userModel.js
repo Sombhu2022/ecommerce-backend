@@ -66,9 +66,9 @@ userModel.pre("save", async function (next) {
     }
   });
   
-  userModel.methods.comparePassword= async(password)=>{
-    console.log("this pass from model",password);
-     return await bcrypt.compare(String(password) , this.password)
+  userModel.methods.comparePassword= async function(password){
+    console.log("this pass from model",password );
+     return await bcrypt.compare(password , this.password)
   }
   
 
