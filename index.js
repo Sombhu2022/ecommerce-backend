@@ -53,7 +53,8 @@ dbConection();
 
 app.get('/' , ( req , res)=>{
        res.send("this is my eccomerce project ... ")
-})
+});
+
 app.use("/product", productRouter)
 app.use('/user' , userRouter)
 app.use('/card' , cardRoute )
