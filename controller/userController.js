@@ -191,7 +191,7 @@ export const changePassWithOtp = async(req , res)=>{
 
         console.log(req.body , typeof(otp));
         const user = await Users.findOne({otp}).select('+password')
-        
+        // console.log(user);
         const isOtpExpire = timeExpire(user.expireAt);
         if(isOtpExpire) {
             user.otp = null;
@@ -239,7 +239,9 @@ export const ChangePasswordWithOldPassword = async(req , res)=>{
         user.password = newPassword;
         await user.save({validateBeforeSave: false})
         
-        res.status(200).json({ success:true , message:"password change successfully", user })
+        // res.status(200).json({ success:true , message:"password change successfully", user })
+        sendCookic(user, res, " password chang successfully", 200)
+
     } catch (error) {
         console.log(error);
         res.status(400).json({ success:false , message:"password not change", error })
