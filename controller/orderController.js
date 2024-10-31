@@ -64,7 +64,7 @@ export const addOrderIntoCart = async (req, res) => {
       
       const order = await instance.orders.create(options);
     
-      res.status(200).json({
+    return  res.status(200).json({
         success: true,
         order,
         key:process.env.RAZORPAY_ID,
@@ -72,7 +72,7 @@ export const addOrderIntoCart = async (req, res) => {
       });
     } catch (error) {
       console.log("this error",error);
-      res.status(400).json({
+    return  res.status(400).json({
         success: false,
         error,
       });
@@ -96,7 +96,7 @@ export const addOrderIntoCart = async (req, res) => {
       }
 
       console.log(data);
-      res.status(200).json({
+     return res.status(200).json({
       success: true,
       data,
       payment:"pending"
@@ -107,7 +107,7 @@ export const addOrderIntoCart = async (req, res) => {
 
   } catch (error) {
     console.log(error);
-    res.status(400).json({
+   return res.status(400).json({
       error,
       message: "order not push"
     })
@@ -169,18 +169,49 @@ export const paymentVerification = async (req, res) => {
 
     // delete cart ..
     // subtruct ordered product ..
-      res.redirect(
+      return res.redirect(
         `${process.env.FRONTEND_URL}/success/${razorpay_payment_id}`
       );
     } else {
-      res.status(400).json({
+     return res.status(400).json({
         success: false,
       });
     }
   } catch (error) {
     console.log(error);
+    return res.status(400).json({
+      message:"something error , please try again",
+      error
+    })
   }
 
 };
 
 
+export const findOrderRecipt = async(req , res)=>{
+
+    const {razorpay_payment_id} = req.params
+
+    try {
+      
+      if(razorpay_payment_id){
+         
+          const data = await Orders.findOne({razorpay_payment_id})
+
+          return res.status(200).json({
+            message:"payment recipt ",
+            data ,
+            success:true
+          })
+      }
+      return res.status(200).json({
+        message:"order details not found "
+      })
+
+    } catch (error) {
+      console.error(error)
+      return res.status(400).json({
+        message:"something error !"
+      })
+    }
+}
