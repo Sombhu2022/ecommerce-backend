@@ -91,7 +91,7 @@ export const addCard = async(req , res)=>{
         })
     
        
-        res.status(200).json({
+       return  res.status(200).json({
             message:" product add in card",
             product:data,
             quantity:quantityFull
@@ -99,6 +99,10 @@ export const addCard = async(req , res)=>{
     
     } catch (error) {
         console.log(error);
+        return res.json({
+            message:"somthing error",
+            error
+        }).status(400)
     }
     
 }
@@ -119,14 +123,14 @@ export const getProductInCartOfUser = async(req, res)=>{
        })
 
        
-        res.status(200).json({
+       return res.status(200).json({
             product:data,
             message:" all product in your cart"
             })
 
     } catch (error) {
         console.log(error);
-        res.status(400).json({
+       return  res.status(400).json({
             message:"product not find",
             error
         })
@@ -203,14 +207,14 @@ export const updateQuantity = async(req , res)=>{
         })
  
         
-         res.status(200).json({
+        return res.status(200).json({
              product:data,
              message:" all product in your cart",
              quantityFull:quantityFull
              })
             } catch (error) {
                 
-                res.status(400).json({
+              return  res.status(400).json({
                    error,
                     message:" somthing error"
             })

@@ -1,264 +1,226 @@
-import { Products } from "../model/product.js"
+import { Products } from "../model/product.js";
 import { v2 as cloudinary } from 'cloudinary';
 
 export const getAllProduct = async (req, res) => {
     try {
-        const product = await Products.find({})
-        res.status(200).json({
-            message: "all products are here",
+        const product = await Products.find({});
+        return res.status(200).json({
+            message: "All products are here",
             success: true,
             product
-        })
+        });
     } catch (error) {
-        res.status(400).json({
-            message: "products not find , somthing wrong",
+        return res.status(400).json({
+            message: "Products not found, something went wrong",
             success: false,
             error
-        })
+        });
     }
-}
+};
 
 export const getProduct = async (req, res) => {
-    const { id } = req.params
+    const { id } = req.params;
     try {
         const product = await Products.findById({ _id: id })
             .populate('review.user')
-            .populate(
-                {
-                    path: "review",
-                    populate: {
-                        path: "user",
-                        model: "user"
-                    }
+            .populate({
+                path: "review",
+                populate: {
+                    path: "user",
+                    model: "user"
                 }
-            )
+            });
 
-        res.status(200).json({
-            message: "product are here",
+        return res.status(200).json({
+            message: "Product is here",
             success: true,
             product
-        })
+        });
     } catch (error) {
-        res.status(400).json({
-            message: "product not find , somthing wrong",
+        return res.status(400).json({
+            message: "Product not found, something went wrong",
             success: false,
             error
-        })
+        });
     }
-}
+};
 
 export const addProduct = async (req, res) => {
-    const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
+    const { name, descreption, price, discount, stock, brand, category, images, review } = req.body;
     console.log(req.body);
-    try {
-        const images = []
-        console.log(typeof req.body.images, req.body.images.length);
-        if (typeof req.body.images === "string") {
-            images.push(req.body.images)
-        }
-        else {
-            console.log("ok");
-            req.body.images.forEach(element => {
-                images.push(element)
-            });
-            //    images = req.body.images
-            console.log(images.length);
-        }
 
-        const tempImageStore = []
+    try {
+        const images = typeof req.body.images === "string" ? [req.body.images] : [...req.body.images];
+        const tempImageStore = [];
 
         for (let i = 0; i < images.length; i++) {
-
             const result = await cloudinary.uploader.upload(images[i], {
                 folder: "ecommerce"
-            })
-
+            });
             tempImageStore.push({
                 image_id: result.public_id,
                 url: result.secure_url
-            })
-            //  console.log(images[i])
-            console.log("working");
+            });
         }
 
-        req.body.images = tempImageStore
-        const product = await Products.create(req.body)
-        res.status(200).json({
+        req.body.images = tempImageStore;
+        const product = await Products.create(req.body);
+        return res.status(200).json({
             message: "New Product added",
             success: true,
             product
-        })
+        });
     } catch (error) {
-        res.status(400).json({
-            message: "product not added",
+        return res.status(400).json({
+            message: "Product not added",
             success: false,
             error
-        })
+        });
     }
-}
+};
 
 export const updateProduct = async (req, res) => {
-    // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
-    const { id } = req.params
+    const { id } = req.params;
     console.log(req.body);
+
     try {
-         await Products.findByIdAndUpdate({_id:id}, req.body, { new: true })
-         const product = Products.find({})
-        res.status(200).json({
-            message: "Product update successfully",
+        await Products.findByIdAndUpdate({ _id: id }, req.body, { new: true });
+        const product = await Products.find({});
+        return res.status(200).json({
+            message: "Product updated successfully",
             success: true,
             product
-        })
+        });
     } catch (error) {
-        res.status(400).json({
-            message: "product not update , somthing error",
+        return res.status(400).json({
+            message: "Product not updated, something went wrong",
             success: false,
             error
-        })
+        });
     }
-}
+};
 
 export const deleteProduct = async (req, res) => {
-    // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
-    const { id } = req.params
-    // console.log(req.body);
+    const { id } = req.params;
+
     try {
-        await Products.findByIdAndDelete({_id:id})
-        const data = Products.find({})
-        res.status(200).json({
+        await Products.findByIdAndDelete({ _id: id });
+        const data = await Products.find({});
+        return res.status(200).json({
             message: "Product deleted",
             success: true,
-            product:data
-        })
+            product: data
+        });
     } catch (error) {
-        res.status(400).json({
-            message: "product not delet , somthing error",
+        return res.status(400).json({
+            message: "Product not deleted, something went wrong",
             success: false,
             error
-        })
+        });
     }
-}
+};
 
 export const searchProductByName = async (req, res) => {
-    // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
     const { name } = req.params;
-    console.log(req.body);
+
     try {
-        const product = await Products.find({ name: name })
-        res.status(200).json({
-            message: "secrching product",
-            success: true,
-            product
-        })
+        const product = await Products.find({
+            name: { $regex: name, $options: "i" }
+        });
+
+        if (product.length > 0) {
+            return res.status(200).json({
+                message: "Product(s) found",
+                success: true,
+                product
+            });
+        } else {
+            return res.status(404).json({
+                message: "No product found with the given name",
+                success: false
+            });
+        }
     } catch (error) {
-        res.status(400).json({
-            message: " somthing error",
+        return res.status(400).json({
+            message: "Something went wrong",
             success: false,
             error
-        })
+        });
     }
-}
-
-
-
+};
 
 export const searchProductByCategory = async (req, res) => {
-    // const { name, descreption, price, discount, stock, brand, category, images, review } = req.body
-    const { category } = req.params;
-    console.log(req.body);
+    let { category } = req.params;
+    console.log(req.params);
+    category = category.toLowerCase();
+
     try {
-        const product = await Products.find({ category: category })
-        res.status(200).json({
-            message: "product searching category",
+        const product = category === 'all category'
+            ? await Products.find({})
+            : await Products.find({ category });
+
+        return res.status(200).json({
+            message: "Product searching by category",
             success: true,
             product
-        })
+        });
     } catch (error) {
-        res.status(400).json({
-            message: "somthing error",
+        return res.status(400).json({
+            message: "Something went wrong",
             success: false,
             error
-        })
+        });
     }
-}
-
-
+};
 
 const reviewPresent = (product, userid) => {
-    return product.review?.find((ele) => {
-        if (String(ele.user) === String(userid)) {
-            return ele
-        } else {
-            return ""
-        }
-    })
-}
-
+    return product.review?.find((ele) => String(ele.user) === String(userid));
+};
 
 export const postReview = async (req, res) => {
     try {
         const user = req.user;
         const { id } = req.params;
-        const { reting, feedback } = req.body
+        const { reting, feedback } = req.body;
 
-        const product = await Products.findById({ _id: id })
+        const product = await Products.findById({ _id: id });
 
-        if (reviewPresent(product, user._id)) {
-
-            const review = reviewPresent(product, user._id)
-
-            if (reting)  review.rating = reting
-            if (feedback) review.feedback = feedback
-            
+        const review = reviewPresent(product, user._id);
+        if (review) {
+            if (reting) review.rating = reting;
+            if (feedback) review.feedback = feedback;
         } else {
-            product.review.push(
-                {
-                    user: user._id,
-                    rating: reting,
-                    feedback: feedback
-                }
-            )
-            
+            product.review.push({
+                user: user._id,
+                rating: reting,
+                feedback: feedback
+            });
         }
-    
-        const totalReview = product.review.length
-        product.totalReview = totalReview
-        
-        let totalRating =0;
-        product.review.map((ele)=>{
-            totalRating += ele.rating
-        })
-        product.totalRating = totalRating / totalReview
-        
-        // save finding product with out schema varification 
-        await product.save({ validateBeforeSave: false })
 
-        // this call populate maping ...  
+        product.totalReview = product.review.length;
+        product.totalRating = product.review.reduce((acc, ele) => acc + ele.rating, 0) / product.totalReview;
+
+        await product.save({ validateBeforeSave: false });
+
         const data = await Products.find({})
             .populate('review.user')
-            .populate(
-                {
-                    path: "review",
-                    populate: {
-                        path: "user",
-                        model: "user"
-                    }
+            .populate({
+                path: "review",
+                populate: {
+                    path: "user",
+                    model: "user"
                 }
-            )
+            });
 
-        // console.log(data);
-        res.status(200).json({
-            message: "review add",
+        return res.status(200).json({
+            message: "Review added",
             product: data
-        })
-
+        });
     } catch (error) {
         console.log(error);
-        res.status(400).json({
-            message: "review not add",
+        return res.status(400).json({
+            message: "Review not added",
             error
-        })
-
+        });
     }
-}
-
+};
