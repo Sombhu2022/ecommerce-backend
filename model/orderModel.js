@@ -64,7 +64,7 @@ const orderSchema =new Schema({
         type:Number,
         default:0
     },
-    delivaryCharge:{
+    deliveryCharge:{
         type:Number,
         default:0
     } ,
@@ -77,7 +77,7 @@ const orderSchema =new Schema({
         enum:['panding' , 'success' , 'rejected'],
         default:'panding'
     },
-    delivarStatus:{
+    deliveryStatus:{
          type:String,
          default:"pending"
     },
@@ -93,6 +93,6 @@ const orderSchema =new Schema({
         type: String,
         // required: true,
       },
-})
+} , {timestamps:true})
 
 export const Orders = model('order' , orderSchema);
