@@ -12,11 +12,12 @@ import { request } from 'http';
 
 import Razorpay from 'razorpay'
 
+
 export const addOrderIntoCart = async (req, res) => {
   try {
     const { id , name } = req.user
     console.log(id);
-    const { email, phone, city, state, district, pincode, cuntry, paymentType, totalAmmount, delivaryFees, products } = req.body
+    const { email, phone, city, state, district, pincode, cuntry, paymentType, totalAmmount, deliveryCharge, products } = req.body
      console.log(req.body);
     const product = await Cards.findById({ _id: products }).populate("cart.product")
       .populate({
@@ -40,7 +41,7 @@ export const addOrderIntoCart = async (req, res) => {
     })
     // console.log(productArray);
 
-    const data = await Orders.create({ user: id, email, phone, products: productArray, totalAmmount, delivaryCharge: delivaryFees, paymentType , address:{ city, state, district, pincode, cuntry } })
+    const data = await Orders.create({ user: id, email, phone, products: productArray, totalAmmount, deliveryCharge:Number(deliveryCharge) , paymentType , address:{ city, state, district, pincode, cuntry } })
    
     await Cards.findByIdAndDelete({_id:products }).then((result)=>{
         console.log(result);
@@ -48,7 +49,7 @@ export const addOrderIntoCart = async (req, res) => {
       
     if (paymentType === 'online') {
       
-    console.log(process.env.RAZORPAY_ID);
+    // console.log(process.env.RAZORPAY_ID);
 
      const instance = new Razorpay({
       key_id: process.env.RAZORPAY_ID,
@@ -214,4 +215,94 @@ export const findOrderRecipt = async(req , res)=>{
         message:"something error !"
       })
     }
+}
+
+
+export const findAllOrderDetails = async(req,res)=>{
+  try {
+    const { id } = req.user
+    const order = await Orders.find({user:id})
+    return res.status(200).json({
+      message:"all orders are fetched ",
+      data:order,
+      success:true
+    })
+  } catch (error) {
+    return res.status(400).json({
+      message:"something error ! please try again",
+      error
+    })
+  }
+}
+
+
+export const changeDeliveryStatus = async(req, res)=>{
+  try {
+    const {orderId} = req.params
+    const {deliveryStatus } = req.body
+
+    const order = await Orders.findById({_id:orderId})
+
+    order.deliveryStatus = deliveryStatus
+
+    await order.save()
+
+    return res.status(200).json({
+      message:"delivery status update success",
+      data:order,
+      success:true
+    })
+    
+  } catch (error) {
+    return res.status(400).json({
+      message:"something error , please try again",
+      error,
+      success:false
+    })
+  }
+}
+
+
+export const fetchAllOrderForAdminSection = async(req , res)=>{
+
+  try {
+    const order =  await Orders.find({})
+
+    return res.status(200).json({
+      message:"all order fetched",
+      data:order,
+      success:true
+    })
+  } catch (error) {
+    
+    console.error(error)
+    return res.status(400).json({
+      message:"something error , please try again !",
+      error
+    })
+
+  }
+
+}
+
+
+export const getOrderDetails = async(req , res)=>{
+  try {
+    const {orderId} = req.params
+
+    const order = await Orders.findById(orderId)
+
+    return res.status(200).json({
+      message:"fetched order !",
+      data:order,
+      success:true
+    })
+    
+  } catch (error) {
+    return res.status(400).json({
+      message:"something error , please try again !",
+      success:false , 
+      error
+    })
+  }
 }
